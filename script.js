@@ -58,8 +58,8 @@ function createCardElement(item) {
     card.className = `card ${item.rarity}-card`;
     card.innerHTML = `
         <div class="card-inner">
-            <div class="card-stars">${stars}</div>
             <div class="card-icon">${item.icon}</div>
+            <div class="card-stars">${stars}</div>
             <div class="card-name">${item.name}</div>
             <div class="card-type">${item.type}</div>
         </div>
@@ -79,6 +79,16 @@ async function flipCard(element, scale = 4, x = 0, y = 0) {
     element.style.transform = `translateX(${x}px) translateY(${y}px) translateZ(0) scale(${scale}) rotateY(180deg)`;
     
     await sleep(800);
+}
+
+function showResultOverlay(element, item) {
+    const overlay = document.createElement('div');
+    overlay.className = 'result-overlay';
+    
+    const resultCard = createCardElement(item);
+    overlay.appendChild(resultCard);
+    
+    element.appendChild(overlay);
 }
 
 function sleep(ms) {
@@ -105,6 +115,9 @@ async function playCardCircleAnimation(cardCount = 30, duration = 4400, item = n
     circleContainer.innerHTML = '';
     cardCircle.classList.add('active');
     backButton.style.display = 'none';
+    
+    const resultContainer = document.getElementById('resultContainer');
+    resultContainer.innerHTML = '';
     
     console.log('Overlay and card circle activated');
     
@@ -212,7 +225,9 @@ async function playCardCircleAnimation(cardCount = 30, duration = 4400, item = n
                     playSound('threeStar');
                 }
                 
-                await flipCard(centerCard.element, 4);
+                await flipCard(centerCard.element, 4, 0, 0);
+                
+                showResultOverlay(centerCard.element, item);
                 
                 await sleep(1000);
                 
@@ -269,7 +284,7 @@ async function playCardCircleAnimation(cardCount = 30, duration = 4400, item = n
                 const col = index % 5;
                 const x = (col - 2) * 300;
                 const y = (row - 0.5) * 320;
-                return { card, x, y, index };
+                return { card, x, y, index, item: items[index] };
             });
             
             cardsWithPositions.forEach(({ card, x, y, index }) => {
@@ -284,41 +299,23 @@ async function playCardCircleAnimation(cardCount = 30, duration = 4400, item = n
                 flipCard(card, 4, x, y)
             ));
             
+            cardsWithPositions.forEach(({ card, item }) => {
+                showResultOverlay(card, item);
+            });
+            
             await sleep(1000);
             
             backButton.style.display = 'block';
         }
         
-        let buttonClicked = false;
-        let remainingSeconds = 10;
-        const updateInterval = setInterval(() => {
-            if (!buttonClicked && remainingSeconds > 0) {
-                remainingSeconds--;
-                backButton.textContent = `返回（${remainingSeconds}）`;
-            }
-        }, 1000);
-        backButton.textContent = `返回（10）`;
-        
         return new Promise(resolveBack => {
-            const timeout = setTimeout(() => {
-                if (!buttonClicked) {
-                    clearInterval(updateInterval);
-                    backButton.style.display = 'none';
-                    cardCircle.classList.remove('active');
-                    circleContainer.innerHTML = '';
-                    overlay.classList.remove('active');
-                    resolveBack();
-                }
-            }, 10000);
-            
             backButton.onclick = () => {
-                buttonClicked = true;
-                clearInterval(updateInterval);
-                clearTimeout(timeout);
                 cardCircle.classList.remove('active');
                 circleContainer.innerHTML = '';
                 backButton.style.display = 'none';
                 overlay.classList.remove('active');
+                const resultContainer = document.getElementById('resultContainer');
+                resultContainer.innerHTML = '';
                 resolveBack();
             };
         });
@@ -327,8 +324,10 @@ async function playCardCircleAnimation(cardCount = 30, duration = 4400, item = n
 
 function updatePityDisplay() {
     const pityStatus = window.gachaSystem.getPityStatus();
-    document.getElementById('fiveStarPity').textContent = pityStatus.fiveStar;
-    document.getElementById('fourStarPity').textContent = pityStatus.fourStar;
+    const fiveStarEl = document.getElementById('fiveStarPity');
+    const fourStarEl = document.getElementById('fourStarPity');
+    if (fiveStarEl) fiveStarEl.textContent = pityStatus.fiveStar;
+    if (fourStarEl) fourStarEl.textContent = pityStatus.fourStar;
 }
 
 async function doSinglePull() {
@@ -337,10 +336,6 @@ async function doSinglePull() {
     
     const item = window.gachaSystem.getSingle();
     await playCardCircleAnimation(30, 4400, item, null);
-    
-    const resultContainer = document.getElementById('resultContainer');
-    resultContainer.innerHTML = '';
-    resultContainer.appendChild(createCardElement(item));
     
     window.historySystem.add(item);
     window.inventorySystem.add(item);
@@ -358,10 +353,7 @@ async function doTenPull() {
     
     await playCardCircleAnimation(30, 4400, null, items);
     
-    const resultContainer = document.getElementById('resultContainer');
-    resultContainer.innerHTML = '';
     items.forEach(item => {
-        resultContainer.appendChild(createCardElement(item));
         window.historySystem.add(item);
         window.inventorySystem.add(item);
     });
@@ -371,36 +363,148 @@ async function doTenPull() {
     window.gachaSystem.isAnimating = false;
 }
 
-function initTabs() {
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
+function openPage(type) {
+    const overlay = document.getElementById('pageOverlay');
+    const inner = document.getElementById('pageInner');
     
-    tabButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const targetTab = btn.dataset.tab;
+    overlay.classList.add('active');
+    inner.innerHTML = '';
+    
+    if (type === 'history') {
+        const summary = document.createElement('div');
+        summary.className = 'history-summary';
+        summary.id = 'historySummary';
+        
+        const list = document.createElement('div');
+        list.className = 'history-list';
+        list.id = 'historyList';
+        
+        inner.appendChild(summary);
+        inner.appendChild(list);
+        
+        window.historySystem.render();
+        window.historySystem.renderSummary();
+    } else if (type === 'inventory') {
+        const summary = document.createElement('div');
+        summary.className = 'inventory-summary';
+        summary.id = 'inventorySummary';
+        
+        const list = document.createElement('div');
+        list.className = 'inventory-list';
+        list.id = 'inventoryList';
+        
+        inner.appendChild(summary);
+        inner.appendChild(list);
+        
+        window.inventorySystem.render();
+        window.inventorySystem.renderSummary();
+    } else if (type === 'rules') {
+        const pityStatus = window.gachaSystem.getPityStatus();
+        inner.innerHTML = `
+            <div class="rules-content">
+                <h2>拾忆规则说明</h2>
+                <div class="pity-display">
+                    <div class="pity-item">
+                        <span class="pity-label">五星保底</span>
+                        <span class="pity-value"><strong>${pityStatus.fiveStar}</strong>/50</span>
+                    </div>
+                    <div class="pity-item">
+                        <span class="pity-label">四星保底</span>
+                        <span class="pity-value"><strong>${pityStatus.fourStar}</strong>/10</span>
+                    </div>
+                </div>
+                <div class="rule-item five-star">
+                    <h3>★★★★★ 同学</h3>
+                    <p>概率：0.6%</p>
+                    <p>保底：50抽必出</p>
+                </div>
+                <div class="rule-item four-star">
+                    <h3>★★★★ 回忆</h3>
+                    <p>概率：5.1%</p>
+                    <p>保底：10抽必出</p>
+                </div>
+                <div class="rule-item three-star">
+                    <h3>★★★ 物品</h3>
+                    <p>概率：94.3%</p>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function closePage() {
+    const overlay = document.getElementById('pageOverlay');
+    overlay.classList.remove('active');
+}
+
+function initNav() {
+    document.getElementById('historyBtn').addEventListener('click', () => openPage('history'));
+    document.getElementById('inventoryBtn').addEventListener('click', () => openPage('inventory'));
+    document.getElementById('rulesBtn').addEventListener('click', () => openPage('rules'));
+    document.getElementById('pageBackBtn').addEventListener('click', closePage);
+}
+
+function initBubbles() {
+    const container = document.getElementById('bubbleContainer');
+    if (!container) return;
+    
+    const threeStarItems = window.GachaData.threeStar;
+    const fourStarItems = window.GachaData.fourStar;
+    const bubbleCount = 15;
+    const bubbles = [];
+    const radius = 130;
+    
+    for (let i = 0; i < bubbleCount; i++) {
+        const isPurple = Math.random() < 0.1;
+        const items = isPurple ? fourStarItems : threeStarItems;
+        const item = items[Math.floor(Math.random() * items.length)];
+        const angle = (i / bubbleCount) * Math.PI * 2;
+        const size = 40 + Math.random() * 20;
+        
+        const bubble = document.createElement('div');
+        bubble.className = `bubble ${isPurple ? 'purple' : 'white'}`;
+        bubble.innerHTML = `<span class="bubble-icon">${item.icon}</span>`;
+        
+        bubble.style.width = `${size}px`;
+        bubble.style.height = `${size}px`;
+        
+        container.appendChild(bubble);
+        bubbles.push({ element: bubble, angle, size, speed: 0.0003 + Math.random() * 0.0002 });
+    }
+    
+    let animationId;
+    let startTime = Date.now();
+    
+    function animate() {
+        const elapsed = Date.now() - startTime;
+        
+        bubbles.forEach((bubble) => {
+            const currentAngle = bubble.angle + elapsed * bubble.speed;
+            const x = Math.cos(currentAngle) * radius;
+            const z = Math.sin(currentAngle) * radius;
+            const scale = 0.6 + (z + radius) / (radius * 2) * 0.8;
+            const blur = Math.max(0, (radius - Math.abs(z)) / radius * 3);
+            const opacity = 0.5 + (z + radius) / (radius * 2) * 0.5;
+            const zIndex = Math.round(z + radius);
             
-            tabButtons.forEach(b => b.classList.remove('active'));
-            tabContents.forEach(c => c.classList.remove('active'));
-            
-            btn.classList.add('active');
-            document.getElementById(`tab-${targetTab}`).classList.add('active');
-            
-            if (targetTab === 'history') {
-                window.historySystem.render();
-                window.historySystem.renderSummary();
-            } else if (targetTab === 'inventory') {
-                window.inventorySystem.render();
-                window.inventorySystem.renderSummary();
-            }
+            bubble.element.style.transform = `translateX(${x}px) translateZ(${z}px) scale(${scale})`;
+            bubble.element.style.filter = `blur(${blur}px)`;
+            bubble.element.style.opacity = opacity;
+            bubble.element.style.zIndex = zIndex;
         });
-    });
+        
+        animationId = requestAnimationFrame(animate);
+    }
+    
+    animate();
 }
 
 function init() {
     document.getElementById('singleBtn').addEventListener('click', doSinglePull);
     document.getElementById('tenBtn').addEventListener('click', doTenPull);
     
-    initTabs();
+    initNav();
+    initBubbles();
     updatePityDisplay();
     
     document.body.addEventListener('click', () => {

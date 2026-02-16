@@ -3,35 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>班级回忆抽卡</title>
+    <title>少26B·拾忆</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="stars"></div>
     <div class="container">
         <div class="header">
-            <h1 class="title">班级回忆抽卡</h1>
-            <p class="subtitle">Class Memories Gacha</p>
+            <h1 class="title">少26B·拾忆</h1>
+            <p class="subtitle">Class 26B Echos of Memories
+            </p>
         </div>
         
-        <div class="tabs">
-            <button class="tab-btn active" data-tab="gacha">抽卡</button>
-            <button class="tab-btn" data-tab="history">历史记录</button>
-            <button class="tab-btn" data-tab="inventory">背包</button>
+        <div class="nav-icons">
+            <button class="nav-icon" id="historyBtn" title="历史记录">
+                <span class="icon">📜</span>
+                <span class="tooltip">历史记录</span>
+            </button>
+            <button class="nav-icon" id="inventoryBtn" title="背包">
+                <span class="icon">🎒</span>
+                <span class="tooltip">背包</span>
+            </button>
+            <button class="nav-icon" id="rulesBtn" title="规则说明">
+                <span class="icon">📋</span>
+                <span class="tooltip">规则说明</span>
+            </button>
         </div>
         
-        <div class="tab-content active" id="tab-gacha">
-            <div class="probability-info">
-                <span class="five-star">★★★★★ 同学 保底50抽 0.6%</span>
-                <span class="four-star">★★★★ 回忆 保底10抽 5.1%</span>
-                <span class="three-star">★★★ 物品 94.3%</span>
+        <div class="bubble-scene" id="bubbleScene">
+            <div class="book-center">
+                <div class="book">📖</div>
+                <div class="brush">🖌️</div>
             </div>
-            
-            <div class="pity-info">
-                <span>五星保底: <strong id="fiveStarPity">0</strong>/50</span>
-                <span>四星保底: <strong id="fourStarPity">0</strong>/10</span>
-            </div>
-            
+            <div class="bubble-container" id="bubbleContainer"></div>
+        </div>
+        
+        <div class="gacha-content">
             <div class="card-display" id="cardDisplay">
                 <div class="empty-state">
                     <div class="empty-icon">✨</div>
@@ -43,24 +50,21 @@
             
             <div class="buttons">
                 <button class="btn single-btn" id="singleBtn">
-                    <span class="btn-text">单次抽卡</span>
-                    <span class="btn-sub">×1</span>
+                    <span class="btn-text">拾忆·一次</span>
+                    <span class="btn-sub">Recall ×1</span>
                 </button>
                 <button class="btn ten-btn" id="tenBtn">
-                    <span class="btn-text">十连抽卡</span>
-                    <span class="btn-sub">×10</span>
+                    <span class="btn-text">拾忆·十次</span>
+                    <span class="btn-sub">Recall ×10</span>
                 </button>
             </div>
         </div>
         
-        <div class="tab-content" id="tab-history">
-            <div class="history-summary" id="historySummary"></div>
-            <div class="history-list" id="historyList"></div>
-        </div>
-        
-        <div class="tab-content" id="tab-inventory">
-            <div class="inventory-summary" id="inventorySummary"></div>
-            <div class="inventory-list" id="inventoryList"></div>
+        <div class="page-overlay" id="pageOverlay">
+            <div class="page-content" id="pageContent">
+                <button class="page-back-btn" id="pageBackBtn">← 返回</button>
+                <div class="page-inner" id="pageInner"></div>
+            </div>
         </div>
     </div>
     
