@@ -88,10 +88,12 @@ function GachaAnimation({ isOpen, item, items, onClose }) {
         resultCard.className = `card ${cardItem.rarity}`;
         resultCard.style.background = 'transparent';
         resultCard.innerHTML = `
-            <div class="card-icon">${cardItem.icon}</div>
-            <div class="card-rarity">${starText}</div>
-            <div class="card-name">${cardItem.name}</div>
-            <div class="card-type">${cardItem.type}</div>
+            <div class="card-inner">
+                <div class="card-icon">${cardItem.icon}</div>
+                <div class="card-rarity">${starText}</div>
+                <div class="card-name">${cardItem.name}</div>
+                <div class="card-type">${cardItem.type}</div>
+            </div>
         `;
         resultCard.style.color = '#000';
         
@@ -219,28 +221,22 @@ function GachaAnimation({ isOpen, item, items, onClose }) {
                 className={getContainerClass()}
                 ref={containerRef}
                 style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    background: 'rgba(92, 64, 51, 0.95)',
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: '100vw',
+                    height: '100vh',
                     display: 'none',
-                    zIndex: 1000,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    opacity: phase === 'entering' ? 0 : 1,
-                    transition: 'opacity 0.3s ease'
+                    perspective: '1500px'
                 }}
             >
                 <div 
                     className="circle-container"
                     style={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        width: 0,
-                        height: 0,
+                        position: 'relative',
+                        width: '100%',
+                        height: '100%',
                         transformStyle: 'preserve-3d'
                     }}
                 >
@@ -269,9 +265,10 @@ function GachaAnimation({ isOpen, item, items, onClose }) {
                                 style={{
                                     width: '100%',
                                     height: '100%',
-                                    objectFit: 'cover',
-                                    border: 'none',
-                                    boxShadow: 'none'
+                                    objectFit: 'contain',
+                                    borderRadius: '8px',
+                                    boxShadow: 'none',
+                                    border: 'none'
                                 }}
                             />
                         </div>
@@ -279,30 +276,31 @@ function GachaAnimation({ isOpen, item, items, onClose }) {
                 </div>
                 
                 <button 
-                    className="close-button"
+                    className="back-button"
                     onClick={onClose}
                     style={{
                         position: 'absolute',
-                        bottom: '50px',
+                        bottom: '80px',
                         left: '50%',
                         transform: 'translateX(-50%)',
-                        padding: '12px 40px',
+                        padding: '15px 50px',
+                        border: '3px solid #a08060',
+                        background: '#f5e6d3',
+                        color: '#5c4033',
+                        fontFamily: 'inherit',
                         fontSize: '1.1rem',
-                        border: '2px solid #f5e6d3',
-                        background: 'transparent',
-                        color: '#f5e6d3',
-                        borderRadius: '8px',
                         cursor: 'pointer',
+                        borderRadius: '12px',
                         transition: 'all 0.3s ease',
-                        fontFamily: 'inherit'
+                        zIndex: '100'
                     }}
                     onMouseEnter={(e) => {
-                        e.target.style.background = '#f5e6d3';
-                        e.target.style.color = '#5c4033';
+                        e.target.style.background = '#e8d5c0';
+                        e.target.style.transform = 'translateX(-50%) translateY(-3px)';
                     }}
                     onMouseLeave={(e) => {
-                        e.target.style.background = 'transparent';
-                        e.target.style.color = '#f5e6d3';
+                        e.target.style.background = '#f5e6d3';
+                        e.target.style.transform = 'translateX(-50%)';
                     }}
                 >
                     返回

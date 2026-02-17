@@ -580,16 +580,25 @@ body {
     height: 100%;
 }
 
+.card-circle-animation {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100vw;
+    height: 100vh;
+    display: none;
+    perspective: 1500px;
+}
+
 .card-circle-animation.active {
     display: block;
 }
 
 .circle-container {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
+    position: relative;
+    width: 100%;
+    height: 100%;
     transform-style: preserve-3d;
 }
 
@@ -610,38 +619,46 @@ body {
 .circle-card .result-overlay {
     position: absolute;
     top: -10%;
-    left: -10%;
-    width: 120%;
+    left: 0;
+    width: 100%;
     height: 120%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     z-index: 10;
+    transform: scale(0.48) rotateY(180deg);
+}
+
+.circle-card .result-overlay > .card {
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    border-radius: 8px !important;
     pointer-events: none;
 }
 
-.circle-card .result-overlay .card {
-    width: 100%;
-    height: 100%;
-    transform: scale(0.48) rotateY(180deg);
-    box-shadow: none;
-    margin: 0;
+.circle-card .result-overlay > .card .card-inner {
+    padding: 5px !important;
 }
 
-.circle-card .result-overlay .card .card-icon {
-    font-size: 2rem !important;
+.circle-card .result-overlay > .card .card-icon {
+    font-size: 1.8rem !important;
+    margin-bottom: 4px !important;
 }
 
-.circle-card .result-overlay .card .card-rarity {
+.circle-card .result-overlay > .card .card-rarity {
     font-size: 0.9rem !important;
+    margin-bottom: 4px !important;
+    color: #5c4033 !important;
 }
 
-.circle-card .result-overlay .card .card-name {
-    font-size: 0.85rem !important;
+.circle-card .result-overlay > .card .card-name {
+    font-size: 0.65rem !important;
+    line-height: 1.2 !important;
+    color: #5c4033 !important;
 }
 
-.circle-card .result-overlay .card .card-type {
-    font-size: 0.75rem !important;
+.circle-card .result-overlay > .card .card-type {
+    font-size: 0.55rem !important;
+    margin-top: 2px !important;
+    color: #8b7355 !important;
 }
 
 .card-circle-animation img {
