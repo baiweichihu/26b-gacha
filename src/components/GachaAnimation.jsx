@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import CircleCard from './CircleCard';
 
 let audioContext = null;
 let audioInitialized = false;
@@ -58,25 +57,46 @@ function GachaAnimation({ isOpen, item, items, onClose }) {
     const cardRefs = useRef([]);
     const animationFrameRef = useRef(null);
     const startTimeRef = useRef(null);
-    const resultCardsRef = useRef([]);
     
     const isSingle = item !== null;
-    const cardItems = isSingle ? [item] : items;
+    const cardItems = isSingle ? [item] : (items || []);
     
     const flipCard = useCallback(async (element, scale = 4, x = 0, y = 0) => {
-        const cardInner = element.querySelector('.card-inner');
-        if (!cardInner) return;
-        
         element.style.transition = 'transform 0.8s ease-in-out';
-        element.style.transform = `translateX(${x}px) translateY(${y}px) translateZ(0) scale(${scale})`;
-        
-        cardInner.style.transition = 'transform 0.8s ease-in-out';
+        element.style.transform = `translateX(${x}px) translateY(${y}px) translateZ(0) scale(${scale}) rotateY(90deg)`;
         
         await sleep(800);
         
-        cardInner.style.transform = 'rotateY(180deg)';
+        const img = element.querySelector('img');
+        if (img) {
+            img.src = 'public/assets/images/card-face-template.png';
+        }
+        
+        element.style.transform = `translateX(${x}px) translateY(${y}px) translateZ(0) scale(${scale}) rotateY(180deg)`;
         
         await sleep(800);
+    }, []);
+    
+    const showResultOverlay = useCallback((element, cardItem) => {
+        const overlay = document.createElement('div');
+        overlay.className = 'result-overlay';
+        
+        const resultCard = document.createElement('div');
+        const starText = cardItem.rarity === 'fiveStar' ? '★★★★★' :
+                        cardItem.rarity === 'fourStar' ? '★★★★' : '★★★';
+        
+        resultCard.className = `card ${cardItem.rarity}`;
+        resultCard.style.background = 'transparent';
+        resultCard.innerHTML = `
+            <div class="card-icon">${cardItem.icon}</div>
+            <div class="card-rarity">${starText}</div>
+            <div class="card-name">${cardItem.name}</div>
+            <div class="card-type">${cardItem.type}</div>
+        `;
+        resultCard.style.color = '#000';
+        
+        overlay.appendChild(resultCard);
+        element.appendChild(overlay);
     }, []);
     
     const performSingleFlip = useCallback(async () => {
@@ -86,8 +106,9 @@ function GachaAnimation({ isOpen, item, items, onClose }) {
         await flipCard(cardRefs.current[0], 4, 0, 0);
         
         setShowResults(true);
+        showResultOverlay(cardRefs.current[0], item);
         playSound(item.rarity);
-    }, [item, flipCard]);
+    }, [item, flipCard, showResultOverlay]);
     
     const performTenFlip = useCallback(async () => {
         if (cardRefs.current.length === 0) return;
@@ -106,6 +127,12 @@ function GachaAnimation({ isOpen, item, items, onClose }) {
         
         setShowResults(true);
         
+        cardRefs.current.forEach((card, index) => {
+            if (items && items[index]) {
+                showResultOverlay(card, items[index]);
+            }
+        });
+        
         const rarities = items.map(i => i.rarity);
         if (rarities.includes('fiveStar')) {
             playSound('fiveStar');
@@ -114,7 +141,7 @@ function GachaAnimation({ isOpen, item, items, onClose }) {
         } else {
             playSound('threeStar');
         }
-    }, [items, flipCard]);
+    }, [items, flipCard, showResultOverlay]);
     
     useEffect(() => {
         if (!isOpen) {
@@ -218,13 +245,36 @@ function GachaAnimation({ isOpen, item, items, onClose }) {
                     }}
                 >
                     {cardItems.map((cardItem, index) => (
-                        <CircleCard 
+                        <div 
                             key={index}
                             ref={(el) => cardRefs.current[index] = el}
-                            isSingle={isSingle}
-                            showResult={showResults}
-                            item={showResults ? cardItem : null}
-                        />
+                            className={`circle-card ${isSingle ? 'single' : 'multiple'}`}
+                            style={{
+                                position: 'absolute',
+                                width: '60px',
+                                height: '82.5px',
+                                left: '50%',
+                                top: '50%',
+                                marginLeft: '-30px',
+                                marginTop: '-41.25px',
+                                transformOrigin: 'center center',
+                                backfaceVisibility: 'visible',
+                                border: 'none',
+                                boxShadow: 'none'
+                            }}
+                        >
+                            <img 
+                                src="public/assets/images/card-back.png" 
+                                alt="card"
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover',
+                                    border: 'none',
+                                    boxShadow: 'none'
+                                }}
+                            />
+                        </div>
                     ))}
                 </div>
                 
