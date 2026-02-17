@@ -1,85 +1,13 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>少26B·拾忆</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="stars"></div>
-    <div class="container">
-        <div class="header">
-            <h1 class="title">少26B·拾忆</h1>
-            <p class="subtitle">Class 26B Echos of Memories
-            </p>
-        </div>
-        
-        <div class="nav-icons">
-            <button class="nav-icon" id="historyBtn" title="历史记录">
-                <span class="icon">📜</span>
-                <span class="tooltip">历史记录</span>
-            </button>
-            <button class="nav-icon" id="inventoryBtn" title="背包">
-                <span class="icon">🎒</span>
-                <span class="tooltip">背包</span>
-            </button>
-            <button class="nav-icon" id="rulesBtn" title="规则说明">
-                <span class="icon">📋</span>
-                <span class="tooltip">规则说明</span>
-            </button>
-        </div>
-        
-        <div class="bubble-scene" id="bubbleScene">
-            <div class="book-center">
-                <div class="book">📖</div>
-                <div class="brush">🖌️</div>
-            </div>
-            <div class="bubble-container" id="bubbleContainer"></div>
-        </div>
-        
-        <div class="gacha-content">
-            <div class="card-display" id="cardDisplay">
-                <div class="empty-state">
-                    <div class="empty-icon">✨</div>
-                    <p>点击下方按钮开始抽卡</p>
-                </div>
-            </div>
-            
-            <div class="result-container" id="resultContainer"></div>
-            
-            <div class="buttons">
-                <button class="btn single-btn" id="singleBtn">
-                    <span class="btn-text">拾忆·一次</span>
-                    <span class="btn-sub">Recall ×1</span>
-                </button>
-                <button class="btn ten-btn" id="tenBtn">
-                    <span class="btn-text">拾忆·十次</span>
-                    <span class="btn-sub">Recall ×10</span>
-                </button>
-            </div>
-        </div>
-        
-        <div class="page-overlay" id="pageOverlay">
-            <div class="page-content" id="pageContent">
-                <button class="page-back-btn" id="pageBackBtn">← 返回</button>
-                <div class="page-inner" id="pageInner"></div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="gacha-overlay" id="gachaOverlay">
-        <div class="lightning"></div>
-        <div class="card-circle-animation" id="cardCircleAnimation">
-            <div class="circle-container" id="circleContainer"></div>
-            <button class="back-button" id="backButton" style="display: none;">返回</button>
-        </div>
-        <div class="card-reveal" id="cardReveal"></div>
-    </div>
-    
-    <script src="gacha.js"></script>
-    <script src="history.js"></script>
-    <script src="inventory.js"></script>
-    <script src="script.js"></script>
-</body>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>

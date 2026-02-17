@@ -444,67 +444,11 @@ function initNav() {
     document.getElementById('pageBackBtn').addEventListener('click', closePage);
 }
 
-function initBubbles() {
-    const container = document.getElementById('bubbleContainer');
-    if (!container) return;
-    
-    const threeStarItems = window.GachaData.threeStar;
-    const fourStarItems = window.GachaData.fourStar;
-    const bubbleCount = 15;
-    const bubbles = [];
-    const radius = 130;
-    
-    for (let i = 0; i < bubbleCount; i++) {
-        const isPurple = Math.random() < 0.1;
-        const items = isPurple ? fourStarItems : threeStarItems;
-        const item = items[Math.floor(Math.random() * items.length)];
-        const angle = (i / bubbleCount) * Math.PI * 2;
-        const size = 40 + Math.random() * 20;
-        
-        const bubble = document.createElement('div');
-        bubble.className = `bubble ${isPurple ? 'purple' : 'white'}`;
-        bubble.innerHTML = `<span class="bubble-icon">${item.icon}</span>`;
-        
-        bubble.style.width = `${size}px`;
-        bubble.style.height = `${size}px`;
-        
-        container.appendChild(bubble);
-        bubbles.push({ element: bubble, angle, size, speed: 0.0003 + Math.random() * 0.0002 });
-    }
-    
-    let animationId;
-    let startTime = Date.now();
-    
-    function animate() {
-        const elapsed = Date.now() - startTime;
-        
-        bubbles.forEach((bubble) => {
-            const currentAngle = bubble.angle + elapsed * bubble.speed;
-            const x = Math.cos(currentAngle) * radius;
-            const z = Math.sin(currentAngle) * radius;
-            const scale = 0.6 + (z + radius) / (radius * 2) * 0.8;
-            const blur = Math.max(0, (radius - Math.abs(z)) / radius * 3);
-            const opacity = 0.5 + (z + radius) / (radius * 2) * 0.5;
-            const zIndex = Math.round(z + radius);
-            
-            bubble.element.style.transform = `translateX(${x}px) translateZ(${z}px) scale(${scale})`;
-            bubble.element.style.filter = `blur(${blur}px)`;
-            bubble.element.style.opacity = opacity;
-            bubble.element.style.zIndex = zIndex;
-        });
-        
-        animationId = requestAnimationFrame(animate);
-    }
-    
-    animate();
-}
-
 function init() {
     document.getElementById('singleBtn').addEventListener('click', doSinglePull);
     document.getElementById('tenBtn').addEventListener('click', doTenPull);
     
     initNav();
-    initBubbles();
     updatePityDisplay();
     
     document.body.addEventListener('click', () => {
