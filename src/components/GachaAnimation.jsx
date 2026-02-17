@@ -1,11 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
-import Card from './Card';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import CircleCard from './CircleCard';
 
 let audioContext = null;
+let audioInitialized = false;
 
 function initAudio() {
-    if (!audioContext) {
+    if (audioInitialized) return;
+    
+    try {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        audioInitialized = true;
+    } catch (e) {
+        console.log('Audio not supported');
     }
 }
 
@@ -19,313 +25,241 @@ function playSound(type) {
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
     
-    if (type === 'pull') {
-        oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.1);
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.2);
-    } else if (type === 'fiveStar') {
-        oscillator.frequency.setValueAtTime(523, audioContext.currentTime);
-        oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.1);
-        oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.2);
-        oscillator.frequency.setValueAtTime(1047, audioContext.currentTime + 0.3);
+    if (type === 'fiveStar') {
+        oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(1760, audioContext.currentTime + 0.2);
         gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.6);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        oscillator.type = 'sine';
     } else if (type === 'fourStar') {
-        oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
-        oscillator.frequency.setValueAtTime(554, audioContext.currentTime + 0.1);
-        oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.2);
+        oscillator.frequency.setValueAtTime(660, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(1320, audioContext.currentTime + 0.15);
         gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.4);
-    } else if (type === 'threeStar') {
-        oscillator.frequency.setValueAtTime(330, audioContext.currentTime);
-        oscillator.frequency.setValueAtTime(392, audioContext.currentTime + 0.1);
+        oscillator.type = 'triangle';
+    } else {
+        oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.1);
         gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.2);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        oscillator.type = 'square';
     }
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.5);
 }
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-export default function GachaAnimation({ 
-    isOpen, 
-    item, 
-    items, 
-    onClose 
-}) {
-    const [showBackButton, setShowBackButton] = useState(false);
-    const circleContainerRef = useRef(null);
-    const animationRef = useRef(null);
-    const cardsRef = useRef([]);
+function GachaAnimation({ isOpen, item, items, onClose }) {
+    const [phase, setPhase] = useState('hidden');
+    const [showResults, setShowResults] = useState(false);
+    const containerRef = useRef(null);
+    const cardRefs = useRef([]);
+    const animationFrameRef = useRef(null);
+    const startTimeRef = useRef(null);
+    const resultCardsRef = useRef([]);
     
-    useEffect(() => {
-        if (!isOpen) return;
-        
-        const isSingle = item !== null;
-        const isTen = items !== null;
-        
-        if (!circleContainerRef.current) return;
-        
-        const container = circleContainerRef.current;
-        container.innerHTML = '';
-        setShowBackButton(false);
-        
-        const cardCount = 30;
-        const radius = 800;
-        const cards = [];
-        
-        for (let i = 0; i < cardCount; i++) {
-            const angle = (i / cardCount) * Math.PI * 2;
-            
-            const card = document.createElement('div');
-            card.className = 'circle-card';
-            card.innerHTML = `<img src="/assets/images/card-back.png" alt="card-back">`;
-            
-            container.appendChild(card);
-            cards.push({ element: card, baseAngle: angle });
-        }
-        
-        cardsRef.current = cards;
-        
-        const startTime = Date.now();
-        let totalRotation = 0;
-        let lastTime = startTime;
-        let rotationSum = 0;
-        const speedScale = 8;
-        const duration = 4400;
-        
-        const animate = () => {
-            const now = Date.now();
-            const elapsed = now - startTime;
-            const deltaTime = now - lastTime;
-            lastTime = now;
-            
-            const progress = elapsed / duration;
-            
-            if (progress >= 1) {
-                processReveal();
-                return;
-            }
-            
-            const speed = speedScale * Math.sin(progress * Math.PI) * Math.sin(progress * Math.PI / 2) * Math.sin(progress * Math.PI / 2);
-            
-            rotationSum += speed * (deltaTime / 1000);
-            totalRotation = rotationSum;
-            
-            cards.forEach(card => {
-                const currentAngle = card.baseAngle - totalRotation;
-                const x = Math.cos(currentAngle) * radius;
-                const z = Math.sin(currentAngle) * radius;
-                const scale = 0.7 + 0.7 * (Math.sin(currentAngle) + 1) / 2;
-                const opacity = 0.3 + 0.7 * (Math.sin(currentAngle) + 1) / 2;
-                const zIndex = Math.floor((Math.sin(currentAngle) + 1) * 100);
-                
-                card.element.style.transform = `translateX(${x}px) translateZ(${z}px) scale(${scale})`;
-                card.element.style.opacity = opacity;
-                card.element.style.zIndex = zIndex;
-            });
-            
-            animationRef.current = requestAnimationFrame(animate);
-        };
-        
-        const processReveal = async () => {
-            await sleep(1000);
-            
-            if (isSingle) {
-                let minAngleDiff = Infinity;
-                let centerCard = null;
-                let centerCardIndex = -1;
-                
-                cards.forEach((card, index) => {
-                    const currentAngle = card.baseAngle - totalRotation;
-                    const normalizedAngle = ((currentAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-                    const angleDiff = Math.abs(normalizedAngle - Math.PI / 2);
-                    
-                    if (angleDiff < minAngleDiff) {
-                        minAngleDiff = angleDiff;
-                        centerCard = card;
-                        centerCardIndex = index;
-                    }
-                });
-                
-                if (centerCard) {
-                    cards.forEach((card, index) => {
-                        if (index !== centerCardIndex) {
-                            card.element.style.opacity = '0';
-                        }
-                    });
-                    
-                    centerCard.element.style.transform = `translateX(0) translateZ(0) scale(1)`;
-                    centerCard.element.style.opacity = '1';
-                    centerCard.element.style.zIndex = '200';
-                    centerCard.element.style.transition = 'transform 0.8s ease-in-out';
-                    
-                    await sleep(300);
-                    
-                    if (item.rarity === 'fiveStar') {
-                        playSound('fiveStar');
-                    } else if (item.rarity === 'fourStar') {
-                        playSound('fourStar');
-                    } else {
-                        playSound('threeStar');
-                    }
-                    
-                    await flipCard(centerCard.element, 4, 0, 0);
-                    showResultOverlay(centerCard.element, item);
-                    await sleep(1000);
-                    setShowBackButton(true);
-                }
-            } else if (isTen) {
-                const highestRarity = items.reduce((highest, current) => {
-                    const ranks = { threeStar: 1, fourStar: 2, fiveStar: 3 };
-                    return ranks[current.rarity] > ranks[highest.rarity] ? current : highest;
-                }, items[0]);
-                
-                if (highestRarity.rarity === 'fiveStar') {
-                    playSound('fiveStar');
-                } else if (highestRarity.rarity === 'fourStar') {
-                    playSound('fourStar');
-                } else {
-                    playSound('threeStar');
-                }
-                
-                const tenCards = [];
-                let centerCardSelected = null;
-                
-                cards.forEach((c) => {
-                    const angle = c.baseAngle - totalRotation;
-                    const distance = Math.abs(Math.sin(angle));
-                    const isCenter = Math.abs(angle % (2 * Math.PI)) < 0.1 || Math.abs((angle % (2 * Math.PI)) - 2 * Math.PI) < 0.1;
-                    
-                    if (isCenter && !centerCardSelected) {
-                        centerCardSelected = { card: c.element, distance: 0 };
-                    } else {
-                        tenCards.push({ card: c.element, distance });
-                    }
-                });
-                
-                tenCards.sort((a, b) => a.distance - b.distance);
-                const otherNineCards = tenCards.slice(0, 9);
-                
-                const selectedCards = centerCardSelected 
-                    ? [centerCardSelected, ...otherNineCards] 
-                    : tenCards.slice(0, 10);
-                
-                const selectedCardSet = new Set(selectedCards.map(s => s.card));
-                
-                cards.forEach((c) => {
-                    c.element.style.transition = 'all 0.5s ease-out';
-                    
-                    if (!selectedCardSet.has(c.element)) {
-                        c.element.style.opacity = '0';
-                    }
-                });
-                
-                const cardsWithPositions = selectedCards.map(({ card }, index) => {
-                    const row = Math.floor(index / 5);
-                    const col = index % 5;
-                    const x = (col - 2) * 300;
-                    const y = (row - 0.5) * 320;
-                    return { card, x, y, index, item: items[index] };
-                });
-                
-                cardsWithPositions.forEach(({ card, x, y, index }) => {
-                    card.style.transform = `translateX(${x}px) translateY(${y}px) translateZ(0) scale(4)`;
-                    card.style.opacity = '1';
-                    card.style.zIndex = 200 + index;
-                });
-                
-                await sleep(500);
-                
-                await Promise.all(cardsWithPositions.map(({ card, x, y }) => 
-                    flipCard(card, 4, x, y)
-                ));
-                
-                cardsWithPositions.forEach(({ card, item }) => {
-                    showResultOverlay(card, item);
-                });
-                
-                await sleep(1000);
-                setShowBackButton(true);
-            }
-        };
-        
-        const flipCard = async (element, scale = 4, x = 0, y = 0) => {
-            element.style.transition = 'transform 0.8s ease-in-out';
-            element.style.transform = `translateX(${x}px) translateY(${y}px) translateZ(0) scale(${scale}) rotateY(90deg)`;
-            
-            await sleep(800);
-            
-            element.querySelector('img').src = '/assets/images/card-face-template.png';
-            
-            element.style.transform = `translateX(${x}px) translateY(${y}px) translateZ(0) scale(${scale}) rotateY(180deg)`;
-            
-            await sleep(800);
-        };
-        
-        const showResultOverlay = (element, item) => {
-            const overlay = document.createElement('div');
-            overlay.className = 'result-overlay';
-            
-            const resultCard = document.createElement('div');
-            const starText = item.rarity === 'fiveStar' ? '★★★★★' :
-                            item.rarity === 'fourStar' ? '★★★★' : '★★★';
-            
-            resultCard.className = `card ${item.rarity}`;
-            resultCard.style.background = 'transparent';
-            resultCard.innerHTML = `
-                <div class="card-icon">${item.icon}</div>
-                <div class="card-rarity">${starText}</div>
-                <div class="card-name">${item.name}</div>
-                <div class="card-type">${item.type}</div>
-            `;
-            resultCard.style.color = '#000';
-            
-            overlay.appendChild(resultCard);
-            element.appendChild(overlay);
-        };
-        
-        animationRef.current = requestAnimationFrame(animate);
-        
-        return () => {
-            if (animationRef.current) {
-                cancelAnimationFrame(animationRef.current);
-            }
-        };
-    }, [isOpen, item, items]);
+    const isSingle = item !== null;
+    const cardItems = isSingle ? [item] : items;
     
-    useEffect(() => {
-        document.body.addEventListener('click', () => {
-            initAudio();
-        }, { once: true });
+    const flipCard = useCallback(async (element, scale = 4, x = 0, y = 0) => {
+        const cardInner = element.querySelector('.card-inner');
+        if (!cardInner) return;
+        
+        element.style.transition = 'transform 0.8s ease-in-out';
+        element.style.transform = `translateX(${x}px) translateY(${y}px) translateZ(0) scale(${scale})`;
+        
+        cardInner.style.transition = 'transform 0.8s ease-in-out';
+        
+        await sleep(800);
+        
+        cardInner.style.transform = 'rotateY(180deg)';
+        
+        await sleep(800);
     }, []);
     
+    const performSingleFlip = useCallback(async () => {
+        if (!cardRefs.current[0]) return;
+        
+        await sleep(800);
+        await flipCard(cardRefs.current[0], 4, 0, 0);
+        
+        setShowResults(true);
+        playSound(item.rarity);
+    }, [item, flipCard]);
+    
+    const performTenFlip = useCallback(async () => {
+        if (cardRefs.current.length === 0) return;
+        
+        await sleep(800);
+        
+        const flipPromises = cardRefs.current.map((card, index) => {
+            const row = Math.floor(index / 5);
+            const col = index % 5;
+            const x = (col - 2) * 90;
+            const y = (row - 0.5) * 120;
+            return flipCard(card, 2.5, x, y);
+        });
+        
+        await Promise.all(flipPromises);
+        
+        setShowResults(true);
+        
+        const rarities = items.map(i => i.rarity);
+        if (rarities.includes('fiveStar')) {
+            playSound('fiveStar');
+        } else if (rarities.includes('fourStar')) {
+            playSound('fourStar');
+        } else {
+            playSound('threeStar');
+        }
+    }, [items, flipCard]);
+    
+    useEffect(() => {
+        if (!isOpen) {
+            setPhase('hidden');
+            setShowResults(false);
+            return;
+        }
+        
+        setPhase('entering');
+        
+        const enterTimer = setTimeout(() => {
+            setPhase('animating');
+            startTimeRef.current = performance.now();
+            
+            if (isSingle) {
+                performSingleFlip();
+            } else {
+                performTenFlip();
+            }
+        }, 100);
+        
+        return () => clearTimeout(enterTimer);
+    }, [isOpen, isSingle, performSingleFlip, performTenFlip]);
+    
+    useEffect(() => {
+        if (phase !== 'animating' || !containerRef.current || showResults) return;
+        
+        const animate = (timestamp) => {
+            const elapsed = timestamp - startTimeRef.current;
+            const t = elapsed / 1000;
+            
+            cardRefs.current.forEach((card, i) => {
+                if (!card) return;
+                
+                let angle, radius;
+                if (isSingle) {
+                    angle = t * 120 + (i * 0);
+                    radius = 0;
+                } else {
+                    angle = t * 120 + (i * 36);
+                    radius = 120 + Math.sin(t * 2) * 10;
+                }
+                
+                const x = Math.cos(angle * Math.PI / 180) * radius;
+                const y = Math.sin(angle * Math.PI / 180) * radius * 0.5;
+                const rotateZ = angle;
+                const rotateY = angle * 2;
+                
+                card.style.transform = `translateX(${x}px) translateY(${y}px) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg)`;
+            });
+            
+            animationFrameRef.current = requestAnimationFrame(animate);
+        };
+        
+        animationFrameRef.current = requestAnimationFrame(animate);
+        
+        return () => {
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+        };
+    }, [phase, isSingle, showResults]);
+    
+    const getContainerClass = () => {
+        let cls = 'card-circle-animation';
+        if (phase === 'entering' || phase === 'animating') {
+            cls += ' active';
+        }
+        return cls;
+    };
+    
     return (
-        <div className={`gacha-overlay ${isOpen ? 'active' : ''}`} id="gachaOverlay">
-            <div className="lightning"></div>
-            <div className="card-circle-animation" id="cardCircleAnimation">
-                <div className="circle-container" ref={circleContainerRef} id="circleContainer"></div>
-                {showBackButton && (
-                    <button 
-                        className="back-button" 
-                        id="backButton" 
-                        onClick={onClose}
-                    >
-                        返回
-                    </button>
-                )}
+        <>
+            <div 
+                className={getContainerClass()}
+                ref={containerRef}
+                style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    background: 'rgba(92, 64, 51, 0.95)',
+                    display: 'none',
+                    zIndex: 1000,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    opacity: phase === 'entering' ? 0 : 1,
+                    transition: 'opacity 0.3s ease'
+                }}
+            >
+                <div 
+                    className="circle-container"
+                    style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        width: 0,
+                        height: 0,
+                        transformStyle: 'preserve-3d'
+                    }}
+                >
+                    {cardItems.map((cardItem, index) => (
+                        <CircleCard 
+                            key={index}
+                            ref={(el) => cardRefs.current[index] = el}
+                            isSingle={isSingle}
+                            showResult={showResults}
+                            item={showResults ? cardItem : null}
+                        />
+                    ))}
+                </div>
+                
+                <button 
+                    className="close-button"
+                    onClick={onClose}
+                    style={{
+                        position: 'absolute',
+                        bottom: '50px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        padding: '12px 40px',
+                        fontSize: '1.1rem',
+                        border: '2px solid #f5e6d3',
+                        background: 'transparent',
+                        color: '#f5e6d3',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        fontFamily: 'inherit'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.target.style.background = '#f5e6d3';
+                        e.target.style.color = '#5c4033';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.target.style.background = 'transparent';
+                        e.target.style.color = '#f5e6d3';
+                    }}
+                >
+                    返回
+                </button>
             </div>
-            <div className="card-reveal" id="cardReveal"></div>
-        </div>
+        </>
     );
 }
+
+export default GachaAnimation;

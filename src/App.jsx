@@ -2,12 +2,9 @@ import { useState } from 'react';
 import Header from './components/Header';
 import NavIcons from './components/NavIcons';
 import GachaButtons from './components/GachaButtons';
-import Card from './components/Card';
 import PageOverlay from './components/PageOverlay';
 import GachaAnimation from './components/GachaAnimation';
-import { useGacha } from './hooks/useGacha';
-import { useHistory } from './hooks/useHistory';
-import { useInventory } from './hooks/useInventory';
+import { useGachaContext } from './context/GachaContext';
 
 function App() {
     const [currentPage, setCurrentPage] = useState(null);
@@ -15,9 +12,7 @@ function App() {
     const [animationItem, setAnimationItem] = useState(null);
     const [animationItems, setAnimationItems] = useState(null);
     
-    const gacha = useGacha();
-    const history = useHistory();
-    const inventory = useInventory();
+    const { gacha, history, inventory, historyStats, inventoryStats } = useGachaContext();
     
     const handleOpenPage = (page) => {
         setCurrentPage(page);
@@ -62,20 +57,6 @@ function App() {
         setAnimationItem(null);
         setAnimationItems(null);
         gacha.setIsAnimating(false);
-    };
-    
-    const historyStats = {
-        fiveStar: history.getFiveStarCount(),
-        fourStar: history.getFourStarCount(),
-        threeStar: history.getThreeStarCount(),
-        total: history.getTotalPulls()
-    };
-    
-    const inventoryStats = {
-        fiveStar: inventory.getRarityCount('fiveStar'),
-        fourStar: inventory.getRarityCount('fourStar'),
-        threeStar: inventory.getRarityCount('threeStar'),
-        total: inventory.getTotalCount()
     };
     
     return (
