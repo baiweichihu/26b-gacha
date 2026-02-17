@@ -1,9 +1,43 @@
+import { GachaData } from '../data/gachaData';
+
 export default function InventoryPage({ items, stats }) {
-    const sortedItems = [...items].sort((a, b) => {
-        const rarityOrder = { fiveStar: 0, fourStar: 1, threeStar: 2 };
-        return rarityOrder[a.rarity] - rarityOrder[b.rarity];
-    });
-    
+    const createInventoryMap = () => {
+        const map = {};
+        items.forEach(item => {
+            const key = `${item.rarity}-${item.name}`;
+            map[key] = item.count;
+        });
+        return map;
+    };
+
+    const inventoryMap = createInventoryMap();
+
+    const renderRaritySection = (rarity, title, starText) => {
+        const allItems = GachaData[rarity];
+        
+        return (
+            <div className="rarity-section" key={rarity}>
+                <div className="rarity-title">{title}</div>
+                <div className="rarity-grid">
+                    {allItems.map((item, index) => {
+                        const key = `${rarity}-${item.name}`;
+                        const count = inventoryMap[key] || 0;
+                        const isObtained = count > 0;
+                        
+                        return (
+                            <div className={`collection-item ${isObtained ? 'obtained' : 'not-obtained'}`} key={index}>
+                                <div className="collection-item-icon">{isObtained ? item.icon : '❓'}</div>
+                                <div className="collection-item-rarity">{starText}</div>
+                                <div className="collection-item-name">{isObtained ? item.name : '???'}</div>
+                                {isObtained && <div className="collection-item-count">×{count}</div>}
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    };
+
     return (
         <>
             <div className="inventory-summary" id="inventorySummary">
@@ -25,25 +59,9 @@ export default function InventoryPage({ items, stats }) {
                 </div>
             </div>
             <div className="inventory-list" id="inventoryList">
-                {sortedItems.length === 0 ? (
-                    <div className="empty-inventory">背包空空如也~</div>
-                ) : (
-                    sortedItems.map((item, index) => {
-                        const starText = item.rarity === 'fiveStar' ? '★★★★★' :
-                                        item.rarity === 'fourStar' ? '★★★★' : '★★★';
-                        
-                        return (
-                            <div className={`inventory-item ${item.rarity}`} key={index}>
-                                <div className="inventory-item-icon">{item.icon}</div>
-                                <div className="inventory-item-info">
-                                    <div className="inventory-item-name">{item.name}</div>
-                                    <div className="inventory-item-rarity">{starText}</div>
-                                </div>
-                                <div className="inventory-item-count">×{item.count}</div>
-                            </div>
-                        );
-                    })
-                )}
+                {renderRaritySection('fiveStar', '五星图鉴', '★★★★★')}
+                {renderRaritySection('fourStar', '四星图鉴', '★★★★')}
+                {renderRaritySection('threeStar', '三星图鉴', '★★★')}
             </div>
         </>
     );

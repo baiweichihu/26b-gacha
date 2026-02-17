@@ -14,12 +14,6 @@ export function GachaProvider({ children }) {
         gacha,
         history,
         inventory,
-        historyStats: {
-            fiveStar: history.getFiveStarCount(),
-            fourStar: history.getFourStarCount(),
-            threeStar: history.getThreeStarCount(),
-            total: history.getTotalPulls()
-        },
         inventoryStats: {
             fiveStar: inventory.getRarityCount('fiveStar'),
             fourStar: inventory.getRarityCount('fourStar'),

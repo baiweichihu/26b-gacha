@@ -7,7 +7,6 @@ export default function PageOverlay({
     currentPage, 
     onClose, 
     history, 
-    historyStats, 
     inventory, 
     inventoryStats, 
     pityStatus 
@@ -15,7 +14,7 @@ export default function PageOverlay({
     const renderContent = () => {
         switch (currentPage) {
             case 'history':
-                return <HistoryPage history={history} stats={historyStats} />;
+                return <HistoryPage history={history} />;
             case 'inventory':
                 return <InventoryPage items={inventory} stats={inventoryStats} />;
             case 'rules':

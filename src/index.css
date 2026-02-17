@@ -135,8 +135,14 @@ body {
     height: 100%;
     max-width: 800px;
     margin: 0 auto;
-    padding: 40px 20px;
+    padding: 80px 20px 50px;
+    box-sizing: border-box;
+}
+
+.page-inner {
+    height: calc(100% - 30px);
     overflow-y: auto;
+    padding-right: 10px;
 }
 
 .page-back-btn {
@@ -213,9 +219,9 @@ body {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    max-height: 60vh;
     overflow-y: auto;
     padding-right: 10px;
+    padding-bottom: 80px;
 }
 
 .history-list::-webkit-scrollbar,
@@ -233,6 +239,22 @@ body {
 .inventory-list::-webkit-scrollbar-thumb {
     background: rgba(160, 128, 96, 0.4);
     border-radius: 4px;
+}
+
+.history-note {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #8b7355;
+    font-style: italic;
+    position: fixed;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    margin-top: 10px;
+}
+ 
+.history-list {
+    padding-bottom: 0;
 }
 
 .history-item,
@@ -325,6 +347,74 @@ body {
     padding: 60px 20px;
     color: #a08060;
     font-size: 1.1rem;
+}
+
+.rarity-section {
+    margin-bottom: 30px;
+}
+
+.rarity-title {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #8b7355;
+    margin-bottom: 15px;
+    font-family: 'ChineseRetro', serif;
+}
+
+.rarity-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 12px;
+}
+
+.collection-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.5);
+    border: 2px solid #a08060;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.collection-item.obtained {
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.collection-item.not-obtained {
+    background: rgba(200, 200, 200, 0.3);
+    border-color: #999;
+    opacity: 0.5;
+}
+
+.collection-item-icon {
+    font-size: 2rem;
+    margin-bottom: 5px;
+}
+
+.collection-item-rarity {
+    font-size: 0.7rem;
+    color: #8b7355;
+    margin-bottom: 3px;
+}
+
+.collection-item-name {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #5c4033;
+    margin-bottom: 3px;
+    text-align: center;
+}
+
+.collection-item-count {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #d4af37;
+    position: absolute;
+    top: 5px;
+    right: 5px;
 }
 
 .rules-content {
@@ -593,6 +683,56 @@ body {
 
 .card-circle-animation.active {
     display: block;
+}
+
+.fog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #f5e6d3;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1000;
+    transition: opacity 0.3s ease-out;
+}
+
+.fog-overlay.active {
+    opacity: 1;
+    animation: fogFade 1.2s ease-out forwards;
+}
+
+.fog-overlay.fade-out {
+    animation: fogFadeOut 0.5s ease-out forwards;
+}
+
+@keyframes fogFade {
+    0% {
+        opacity: 0;
+        transform: scale(0.1);
+    }
+    20% {
+        opacity: 1;
+        transform: scale(0.3);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes fogFadeOut {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
 }
 
 .circle-container {

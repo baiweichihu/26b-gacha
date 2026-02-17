@@ -1,24 +1,6 @@
-export default function HistoryPage({ history, stats }) {
+export default function HistoryPage({ history }) {
     return (
         <>
-            <div className="history-summary" id="historySummary">
-                <div className="summary-item five-star">
-                    <span className="summary-count">{stats.fiveStar}</span>
-                    <span className="summary-label">五星</span>
-                </div>
-                <div className="summary-item four-star">
-                    <span className="summary-count">{stats.fourStar}</span>
-                    <span className="summary-label">四星</span>
-                </div>
-                <div className="summary-item three-star">
-                    <span className="summary-count">{stats.threeStar}</span>
-                    <span className="summary-label">三星</span>
-                </div>
-                <div className="summary-item total">
-                    <span className="summary-count">{stats.total}</span>
-                    <span className="summary-label">总抽数</span>
-                </div>
-            </div>
             <div className="history-list" id="historyList">
                 {history.length === 0 ? (
                     <div className="empty-history">暂无抽卡记录</div>
@@ -43,6 +25,9 @@ export default function HistoryPage({ history, stats }) {
                         );
                     })
                 )}
+            </div>
+            <div className="history-note">
+                只保留最近100条拾忆记录
             </div>
         </>
     );

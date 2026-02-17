@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Header from './components/Header';
 import NavIcons from './components/NavIcons';
 import GachaButtons from './components/GachaButtons';
@@ -12,7 +12,7 @@ function App() {
     const [animationItem, setAnimationItem] = useState(null);
     const [animationItems, setAnimationItems] = useState(null);
     
-    const { gacha, history, inventory, historyStats, inventoryStats } = useGachaContext();
+    const { gacha, history, inventory, inventoryStats } = useGachaContext();
     
     const handleOpenPage = (page) => {
         setCurrentPage(page);
@@ -45,6 +45,13 @@ function App() {
     };
     
     const handleAnimationClose = () => {
+        setAnimationOpen(false);
+        setAnimationItem(null);
+        setAnimationItems(null);
+        gacha.setIsAnimating(false);
+    };
+
+    const handleAnimationComplete = useCallback(() => {
         if (animationItem) {
             history.add(animationItem);
             inventory.add(animationItem);
@@ -52,17 +59,12 @@ function App() {
             history.addBatch(animationItems);
             inventory.addBatch(animationItems);
         }
-        
-        setAnimationOpen(false);
-        setAnimationItem(null);
-        setAnimationItems(null);
-        gacha.setIsAnimating(false);
-    };
+    }, [animationItem, animationItems, history, inventory]);
     
     return (
         <div className="container">
-            <Header />
-            <NavIcons onOpenPage={handleOpenPage} />
+            <Header hidden={animationOpen} />
+            <NavIcons onOpenPage={handleOpenPage} hidden={animationOpen} />
             
             <div className="gacha-content">
                 <div className="card-display" id="cardDisplay"></div>
@@ -70,7 +72,8 @@ function App() {
                 <GachaButtons 
                     onSinglePull={handleSinglePull}
                     onTenPull={handleTenPull}
-                    disabled={gacha.isAnimating}
+                    disabled={gacha.isAnimating || animationOpen}
+                    hidden={animationOpen}
                 />
             </div>
             
@@ -79,7 +82,6 @@ function App() {
                 currentPage={currentPage}
                 onClose={handleClosePage}
                 history={history.history}
-                historyStats={historyStats}
                 inventory={inventory.getAll()}
                 inventoryStats={inventoryStats}
                 pityStatus={gacha.getPityStatus()}
@@ -90,6 +92,7 @@ function App() {
                 item={animationItem}
                 items={animationItems}
                 onClose={handleAnimationClose}
+                onComplete={handleAnimationComplete}
             />
         </div>
     );

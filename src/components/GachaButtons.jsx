@@ -1,4 +1,6 @@
-export default function GachaButtons({ onSinglePull, onTenPull, disabled }) {
+export default function GachaButtons({ onSinglePull, onTenPull, disabled, hidden }) {
+    if (hidden) return null;
+    
     return (
         <div className="buttons">
             <button 

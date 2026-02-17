@@ -1,4 +1,6 @@
-export default function NavIcons({ onOpenPage }) {
+export default function NavIcons({ onOpenPage, hidden }) {
+    if (hidden) return null;
+    
     return (
         <div className="nav-icons">
             <button className="nav-icon" onClick={() => onOpenPage('history')} title="历史记录">

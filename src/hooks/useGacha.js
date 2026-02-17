@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { GachaData, GachaConfig } from '../data/gachaData';
 
 export function useGacha() {
@@ -6,6 +6,36 @@ export function useGacha() {
     const [fourStarPityCounter, setFourStarPityCounter] = useState(0);
     const [totalPulls, setTotalPulls] = useState(0);
     const [isAnimating, setIsAnimating] = useState(false);
+
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem('gachaPity');
+            if (saved) {
+                const data = JSON.parse(saved);
+                if (typeof data.fiveStar === 'number') {
+                    setFiveStarPityCounter(data.fiveStar);
+                }
+                if (typeof data.fourStar === 'number') {
+                    setFourStarPityCounter(data.fourStar);
+                }
+                if (typeof data.total === 'number') {
+                    setTotalPulls(data.total);
+                }
+            }
+        } catch (e) {
+        }
+    }, []);
+
+    const savePityToStorage = useCallback((fiveStar, fourStar, total) => {
+        try {
+            localStorage.setItem('gachaPity', JSON.stringify({
+                fiveStar,
+                fourStar,
+                total
+            }));
+        } catch (e) {
+        }
+    }, []);
 
     const calculatePityRate = useCallback((counter, pityThreshold, baseRate) => {
         if (counter >= pityThreshold) {
@@ -45,6 +75,7 @@ export function useGacha() {
         setFiveStarPityCounter(finalFiveStarPity);
         setFourStarPityCounter(finalFourStarPity);
         setTotalPulls(newTotal);
+        savePityToStorage(finalFiveStarPity, finalFourStarPity, newTotal);
 
         return {
             ...item,
@@ -61,17 +92,52 @@ export function useGacha() {
         const items = [];
         let hasFourStar = false;
         let hasFiveStar = false;
+        let tempFiveStarPity = fiveStarPityCounter;
+        let tempFourStarPity = fourStarPityCounter;
+        let tempTotal = totalPulls;
 
         for (let i = 0; i < 10; i++) {
-            const item = getRandomItem();
-            items.push(item);
+            tempFiveStarPity++;
+            tempFourStarPity++;
+            tempTotal++;
+
+            const fiveStarPityRate = calculatePityRate(tempFiveStarPity, GachaConfig.fiveStarPity, GachaConfig.fiveStarBaseRate);
+            const fourStarPityRate = calculatePityRate(tempFourStarPity, GachaConfig.fourStarPity, GachaConfig.fourStarBaseRate);
+
+            const rand = Math.random() * 100;
+            let rarity;
+
+            if (rand < fiveStarPityRate) {
+                rarity = 'fiveStar';
+                tempFiveStarPity = 0;
+                tempFourStarPity = 0;
+            } else if (rand < fiveStarPityRate + fourStarPityRate) {
+                rarity = 'fourStar';
+                tempFourStarPity = 0;
+            } else {
+                rarity = 'threeStar';
+            }
+
+            const gachaItems = GachaData[rarity];
+            const item = gachaItems[Math.floor(Math.random() * gachaItems.length)];
+
+            items.push({
+                ...item,
+                rarity,
+                pullNumber: tempTotal
+            });
 
             if (item.rarity === 'fourStar') hasFourStar = true;
             if (item.rarity === 'fiveStar') hasFiveStar = true;
         }
 
+        setFiveStarPityCounter(tempFiveStarPity);
+        setFourStarPityCounter(tempFourStarPity);
+        setTotalPulls(tempTotal);
+        savePityToStorage(tempFiveStarPity, tempFourStarPity, tempTotal);
+
         return items;
-    }, [getRandomItem]);
+    }, [fiveStarPityCounter, fourStarPityCounter, totalPulls, calculatePityRate]);
 
     const getPityStatus = useCallback(() => {
         return {
